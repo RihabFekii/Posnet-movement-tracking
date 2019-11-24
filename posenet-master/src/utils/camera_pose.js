@@ -1,11 +1,12 @@
 import {drawKeypoints, drawSkeleton} from './draw';
+import {drawKeypoints_inst, drawSkeleton_inst} from './draw_instructor';
 import WebcamSetup from './webcam';
 import Model from './model'
 import CosineSimilarity from './similarity';
 
 
-const videoWidth = 540;
-const videoHeight = 540;
+const videoWidth = 640;
+const videoHeight = 653;
 
 let minPoseConfidence = 0.2
 let minPartConfidence = 0.2
@@ -51,7 +52,7 @@ function detectPoseInRealTime(video, net, confront_pose) {
             drawSkeleton(keypoints, minPartConfidence, ctx);
             //drawBoundingBox(keypoints, ctx);
 
-            console.log(similarity.calculate({score, keypoints}, confront_pose));
+            //console.log(similarity.calculate({score, keypoints}, confront_pose));
         }
       });
 
@@ -60,6 +61,64 @@ function detectPoseInRealTime(video, net, confront_pose) {
     }
 
     poseDetection();
+}
+/* instructor*/ 
+function detectPoseInstructor(video, net, confront_pose){
+  console.log(net);
+    var canvas = document.getElementById('c');
+    var ctx = canvas.getContext('2d');
+    var video = document.getElementById('vid_inst');
+
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
+  
+    video.addEventListener('play', function() {
+      var $this = this; //cache
+      (function loop() {
+        if (!$this.paused && !$this.ended) {
+          ctx.drawImage($this, 0, 0);
+          setTimeout(loop, 1000 / 30); // drawing at 30fps
+        }
+      })();
+    }, 0)
+
+    async function poseDetection() {
+      let poses_inst = [];
+
+      let all_poses = await net.estimatePoses(video, {
+        flipHorizontal: true,
+        decodingMethod: 'multi-person',
+        maxDetections: 2,
+        scoreThreshold: 0.6,
+      });
+
+      poses_inst = poses_inst.concat(all_poses);
+
+      ctx.clearRect(0, 0, videoWidth, videoHeight);
+
+      ctx.save();
+      ctx.scale(-1, 1);
+      ctx.translate(-videoWidth, 0);
+      ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
+      ctx.restore();
+
+      poses_inst.forEach(({score, keypoints_inst}) => {
+        if (score >= minPoseConfidence) {
+            console.log(keypoints_inst);
+            drawKeypoints_inst(keypoints_inst, minPartConfidence, ctx);
+            drawSkeleton_inst(keypoints_inst, minPartConfidence, ctx);
+            //drawBoundingBox(keypoints, ctx);
+
+            //console.log(similarity.calculate({score, keypoints}, confront_pose));
+        }
+      });
+
+      requestAnimationFrame(poseDetection);
+
+    }
+
+    poseDetection();
+
 }
 
 async function loadVideo() {
@@ -82,7 +141,7 @@ export async function bindPage(confront_pose) {
   const net = await model.load();
   
   let video;
-  
+  let video_instructor= document.getElementById('vid_inst')
   try {
     video = await loadVideo();
   } catch (e) {
@@ -90,4 +149,6 @@ export async function bindPage(confront_pose) {
     throw e;
   }
   detectPoseInRealTime(video, net, confront_pose);
+  detectPoseInstructor(video_instructor, net, confront_pose )
 }
+
