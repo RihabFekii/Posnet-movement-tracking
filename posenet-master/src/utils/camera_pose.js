@@ -46,7 +46,7 @@ function detectPoseInRealTime(video, net, confront_pose) {
       ctx.restore();
 
       poses.forEach(({score, keypoints}) => {
-        if (score >= minPoseConfidence) {
+        if ( keypoints && score >= minPoseConfidence) {
             console.log(keypoints);
             drawKeypoints(keypoints, minPartConfidence, ctx);
             drawSkeleton(keypoints, minPartConfidence, ctx);
@@ -103,7 +103,7 @@ function detectPoseInstructor(video, net, confront_pose){
       ctx.restore();
 
       poses_inst.forEach(({score, keypoints_inst}) => {
-        if (score >= minPoseConfidence) {
+        if (keypoints_inst && score >= minPoseConfidence ) {
             console.log(keypoints_inst);
             drawKeypoints_inst(keypoints_inst, minPartConfidence, ctx);
             drawSkeleton_inst(keypoints_inst, minPartConfidence, ctx);
