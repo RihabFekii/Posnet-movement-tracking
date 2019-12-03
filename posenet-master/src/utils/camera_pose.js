@@ -102,11 +102,12 @@ function detectPoseInstructor(video, net, confront_pose){
       ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
       ctx.restore();
 
-      poses_inst.forEach(({score, keypoints_inst}) => {
-        if (keypoints_inst && score >= minPoseConfidence ) {
-            console.log(keypoints_inst);
-            drawKeypoints_inst(keypoints_inst, minPartConfidence, ctx);
-            drawSkeleton_inst(keypoints_inst, minPartConfidence, ctx);
+      poses_inst.forEach((obj) => {
+        // console.log(obj);
+        if (obj.keypoints && obj.score >= minPoseConfidence ) {
+            // console.log(keypoints_inst);
+            drawKeypoints_inst(obj.keypoints, minPartConfidence, ctx);
+            drawSkeleton_inst(obj.keypoints, minPartConfidence, ctx);
             //drawBoundingBox(keypoints, ctx);
 
             //console.log(similarity.calculate({score, keypoints}, confront_pose));
@@ -141,7 +142,7 @@ export async function bindPage(confront_pose) {
   const net = await model.load();
   
   let video;
-  let video_instructor= document.getElementById('vid_inst')
+  let video_instructor = document.getElementById('vid_inst')
   try {
     video = await loadVideo();
   } catch (e) {
