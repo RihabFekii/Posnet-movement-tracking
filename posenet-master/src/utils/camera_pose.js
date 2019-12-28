@@ -45,9 +45,20 @@ function detectPoseInRealTime(video, net, confront_pose) {
       ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
       ctx.restore();
 
+      
       poses.forEach(({score, keypoints}) => {
-        if (score >= minPoseConfidence) {
+        if ( keypoints && score >= minPoseConfidence) {
             console.log(keypoints);
+            var user_poses = localStorage.getItem('user_poses')
+            var inst_poses = localStorage.getItem('inst_poses')
+            var user_user = [] , inst_inst= []
+
+            if (user_poses && inst_poses  ){
+                user_user = JSON.parse(user_poses)
+                inst_inst = JSON.parse(inst_poses)
+            }
+            console.log('hi', user_user, 'hi hi', inst_inst)
+            localStorage.setItem('user_poses', JSON.stringify(keypoints))
             drawKeypoints(keypoints, minPartConfidence, ctx);
             drawSkeleton(keypoints, minPartConfidence, ctx);
             //drawBoundingBox(keypoints, ctx);
@@ -102,11 +113,15 @@ function detectPoseInstructor(video, net, confront_pose){
       ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
       ctx.restore();
 
-      poses_inst.forEach(({score, keypoints_inst}) => {
-        if (score >= minPoseConfidence) {
-            console.log(keypoints_inst);
-            drawKeypoints_inst(keypoints_inst, minPartConfidence, ctx);
-            drawSkeleton_inst(keypoints_inst, minPartConfidence, ctx);
+      poses_inst.forEach((obj) => {
+        // console.log(obj);
+        if (obj.keypoints && obj.score >= minPoseConfidence ) {
+            // console.log(keypoints_inst);
+            console.log('instructor',obj.keypoints)
+            var instructor_poses = localStorage.getItem('inst_poses')
+            localStorage.setItem('inst_poses', JSON.stringify(obj.keypoints))
+            drawKeypoints_inst(obj.keypoints, minPartConfidence, ctx);
+            drawSkeleton_inst(obj.keypoints, minPartConfidence, ctx);
             //drawBoundingBox(keypoints, ctx);
 
             //console.log(similarity.calculate({score, keypoints}, confront_pose));
@@ -141,7 +156,7 @@ export async function bindPage(confront_pose) {
   const net = await model.load();
   
   let video;
-  let video_instructor= document.getElementById('vid_inst')
+  let video_instructor = document.getElementById('vid_inst')
   try {
     video = await loadVideo();
   } catch (e) {
